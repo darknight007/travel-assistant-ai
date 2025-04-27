@@ -4,3 +4,4 @@ python-dotenv
 fastapi
 uvicorn
 streamlit>=1.29.0
+langchain-community
