@@ -6,6 +6,9 @@ from langchain.schema.messages import SystemMessage
 from dotenv import load_dotenv
 import os
 import json
+import openai
+from dotenv import load_dotenv
+from utils import get_flight_options, get_hotel_options
 
 # Load environment variables
 load_dotenv()
@@ -22,6 +25,50 @@ memory = ConversationBufferMemory(
     memory_key="chat_history",
     return_messages=True
 )
+
+def gpt_call_with_functions(prompt):
+    functions = [
+        {
+            "name": "get_flight_options",
+            "description": "Fetch flight options for a destination",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "destination": {"type": "string"},
+                    "dates": {"type": "string"}
+                },
+                "required": ["destination", "dates"]
+            }
+        },
+        {
+            "name": "get_hotel_options",
+            "description": "Fetch hotel options for a destination",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "destination": {"type": "string"},
+                    "dates": {"type": "string"},
+                    "budget_per_night": {"type": "number"}
+                },
+                "required": ["destination", "dates", "budget_per_night"]
+            }
+        }
+    ]
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4-0613",
+        messages=[
+            {"role": "user", "content": prompt}
+        ],
+        functions=functions,
+        function_call="auto"  # let GPT-4 decide
+    )
+
+    return response['choices'][0]['message']
+
+# Usage
+# reply = gpt_call_with_functions("Find flights to Paris for 10th Oct")
+# print(reply)
 
 # Define tools for the agent
 tools = [
@@ -135,6 +182,25 @@ system_message = SystemMessage(
     Generate package suggestions based on user's budget and preferences.
     """
 )
+def optimize_activities(budget_remaining):
+    activities = [
+        {"activity": "Disneyland Full Day Pass", "cost": 120},
+        {"activity": "Louvre Museum Guided Tour", "cost": 60},
+        {"activity": "Seine River Cruise", "cost": 45},
+        {"activity": "Paris City Bike Tour", "cost": 50},
+        {"activity": "Wine Tasting Experience", "cost": 80},
+        {"activity": "Versailles Day Trip", "cost": 100}
+    ]
+
+    selected = []
+    total_spent = 0
+
+    for activity in sorted(activities, key=lambda x: x['cost']):
+        if total_spent + activity["cost"] <= budget_remaining:
+            selected.append(activity)
+            total_spent += activity["cost"]
+
+    return selected, total_spent
 
 # Initialize the agent
 agent = initialize_agent(

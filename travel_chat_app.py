@@ -146,3 +146,54 @@ st.markdown("""
         Created with ❤️ by TravelBuddy AI | All travel recommendations are subject to availability
     </div>
 """, unsafe_allow_html=True)
+st.sidebar.title("About")
+st.sidebar.info(
+    """
+    TravelBuddy AI helps you create your personalized travel packages using AI!
+    Built with ❤️ using LangChain and GPT-4.
+    """
+)
+st.sidebar.header("🛫 Trip Preferences")
+
+destination = st.sidebar.text_input("Destination")
+start_date = st.sidebar.date_input("Start Date")
+end_date = st.sidebar.date_input("End Date")
+budget = st.sidebar.slider("Total Budget ($)", 500, 10000, 2000)
+travel_type = st.sidebar.selectbox(
+    "Travel Type",
+    ("Adventure", "Relaxation", "Family Vacation", "Honeymoon", "Backpacking")
+)
+
+submit_button = st.sidebar.button("Plan My Trip!")
+if submit_button:
+    # 1. Show Chatbot Interaction (Optional)
+    st.subheader("🧠 AI Conversation")
+
+    with st.chat_message("user"):
+        st.write(f"I'm planning a {travel_type.lower()} to {destination} from {start_date} to {end_date} with a ${budget} budget.")
+
+    with st.chat_message("assistant"):
+        st.write("Awesome! Let me craft a dream package for you... ✈️🏨🎉")
+
+    # 2. Fetch Flights, Hotels (via function calling or dummy data)
+    flights = get_flight_options(destination, f"{start_date} to {end_date}")
+    hotels = get_hotel_options(destination, f"{start_date} to {end_date}", budget_per_night=(budget/5)/len(flights))
+
+    st.subheader("✈️ Flight Options")
+    st.table(flights)
+
+    st.subheader("🏨 Hotel Options")
+    st.table(hotels)
+
+    # 3. Budget Optimization for Activities
+    st.subheader("🎉 Optimized Activities under Your Budget")
+
+    total_flight_hotel_cost = flights[0]['price'] + hotels[0]['price_per_night'] * 5  # 5 nights assumption
+    remaining_budget = budget - total_flight_hotel_cost
+
+    if remaining_budget > 0:
+        activities, spent = optimize_activities(remaining_budget)
+        st.success(f"Activities selected within your remaining budget (${remaining_budget:.2f}):")
+        st.table(activities)
+    else:
+        st.warning("Your budget is fully utilized for travel and stay. No additional activities suggested.")

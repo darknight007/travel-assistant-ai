@@ -10,6 +10,7 @@ from langchain.schema.messages import SystemMessage
 from dotenv import load_dotenv
 import os
 from openai import OpenAIError
+import random
 
 # Load environment variables
 load_dotenv()
@@ -147,7 +148,21 @@ system_message = SystemMessage(
     Generate package suggestions based on user's budget and preferences.
     """
 )
+def get_flight_options(destination, dates):
+    # Simulated dummy flight options
+    return [
+        {"airline": "Air France", "price": random.randint(400, 800)},
+        {"airline": "Emirates", "price": random.randint(450, 850)},
+        {"airline": "Lufthansa", "price": random.randint(420, 790)}
+    ]
 
+def get_hotel_options(destination, dates, budget_per_night):
+    # Simulated dummy hotels
+    return [
+        {"hotel_name": "Hotel Lux", "price_per_night": random.randint(100, 200)},
+        {"hotel_name": "Comfort Suites", "price_per_night": random.randint(80, 150)},
+        {"hotel_name": "City Inn", "price_per_night": random.randint(90, 170)}
+    ]
 # Initialize the agent with system message
 agent = initialize_agent(
     tools,
